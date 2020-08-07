@@ -16,6 +16,7 @@ class Station:
         self.visited = []
         self.best_routes = None
         self.neighbours = None
+        self.infinity = 9999
 
     def set_neighbours(self):
         neighbours = dict()
@@ -28,7 +29,7 @@ class Station:
 
     def set_current_station(self):
         next_station = None
-        previous = infinity
+        previous = self.infinity
         for k,v in self.best_routes.items():
             if previous > v["time"] and k not in self.visited:
                 next_station = k
@@ -47,7 +48,7 @@ class Station:
     def get_initail_routes(self):
         routes = dict()
         for s in self.all_stations:
-            time = infinity
+            time = self.infinity
             if s == self.current_station:
                 time = 0
             routes[s] = {
@@ -70,7 +71,7 @@ class Station:
         stops = 0 
         des = self.destination
         for i in range(20):
-            if self.best_routes[des]["time"] == infinity:
+            if self.best_routes[des]["time"] == self.infinity:
                 return stops
             if self.best_routes[des]["prev"] != self.source:
                 stops += 1
@@ -79,6 +80,8 @@ class Station:
                 break
         return stops
 
+    def get_infinity(self):
+        return self.infinity
 
 
 def read_routes_file(filename):
@@ -102,7 +105,7 @@ if __name__ == "__main__":
     file_name = args.file or "routes.csv"
     routes_list, all_stations = read_routes_file(file_name)
 
-    infinity = 9999
+
     source = input("What station are you getting on the train?: ").upper()
     destination = input("What station are you getting off the train?: ").upper()
 
@@ -112,9 +115,10 @@ if __name__ == "__main__":
         print("You're on the station you would like to go -_-")
     else:
         st = Station(source, destination, all_stations, routes_list)
+        print(st)
         best_routes = st.get_best_routes()
         stop_count = st.get_count_stops()
-        if best_routes[destination]["time"] != infinity:
+        if best_routes[destination]["time"] != st.get_infinity():
             print(f"Result: Best Routes from {source} -> {destination} takes {best_routes[destination]['time']} minutes, with {stop_count} stops.")
         else:
             print(f"Result: No routes from {source} -> {destination}")
