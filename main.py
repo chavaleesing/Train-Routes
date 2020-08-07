@@ -1,111 +1,123 @@
 import csv
 import pprint
+import sys
+import argparse
 
-paths = []
-with open('routes.csv') as csv_file:
-    csv_reader = csv.reader(csv_file, delimiter=',')
-    for row in csv_reader:
-        paths.append({
-            "station": [row[0], row[1]],
-            "time": int(row[2])
-        })
 
 class Station:
 
-    def __init__(self, name):
-        self.source = name
-        self.name = name
-        self.neighbours = None
-        self.all_stations = self.get_all_stations(paths)
+    def __init__(self, source, destination, all_stations, routes_list):
+
+        self.source = source
+        self.destination = destination
+        self.all_stations = all_stations
+        self.routes_list = routes_list
+
+        self.current_station = source
         self.visited = []
-        self.routes = self.initail_routes()
+        self.best_routes = None
+        self.neighbours = None
 
-    def get_neighbours(self):
+    def set_neighbours(self):
         neighbours = dict()
-        for path in paths:
-            if self.name in path["station"]:
-                path["station"].remove(self.name)
+        for path in self.routes_list:
+            if self.current_station in path["station"]:
+                path["station"].remove(self.current_station)
                 neighbours[path["station"][0]] = path["time"]
-                path["station"].append(self.name)
-        # print(neighbours)
+                path["station"].append(self.current_station)
         self.neighbours = neighbours
-        return neighbours
+        # return neighbours
 
-    def initail_routes(self):
-        routes = dict()
-        infinite = 999
-        for s in self.all_stations:
-            routes[s] = {
-                "time": infinite,
-                "prev": None 
-            }
-            if s == self.name:
-                routes[s] = {
-                "time": 0,
-                "prev": None 
-            }
-        return routes
-
-    def find_next_station(self):
+    def set_current_station(self):
         next_station = None
-        previous = 999
-        for k,v in self.routes.items():
+        previous = infinity
+        for k,v in self.best_routes.items():
             if previous > v["time"] and k not in self.visited:
                 next_station = k
             if k not in self.visited:
                 previous = v["time"]
         # print(f"next_station: {next_station}")
         self.visited.append(next_station)
-        self.name = next_station
+        self.current_station = next_station
 
-    def replace_with_min_time(self):
+    def set_min_time(self):
         for k,v in self.neighbours.items():
-            sum_time = self.routes[self.name]["time"] + v
-            if self.routes[k]["time"] > sum_time:
-                self.routes[k]["time"] = sum_time
-                self.routes[k]["prev"] = self.name
+            sum_time = self.best_routes[self.current_station]["time"] + v
+            if self.best_routes[k]["time"] > sum_time:
+                self.best_routes[k]["time"] = sum_time
+                self.best_routes[k]["prev"] = self.current_station
 
-    def get_all_stations(self, paths):
-        all_stations = set()
-        for path in paths:
-            all_stations.update(path["station"])
-        # print(f"all_stations = {all_stations}, {len(all_stations)}")
-        all_stations = list(all_stations)
-        all_stations.sort()
-        return all_stations
+    def get_initail_routes(self):
+        routes = dict()
+        for s in self.all_stations:
+            time = infinity
+            if s == self.current_station:
+                time = 0
+            routes[s] = {
+                "time": time,
+                "prev": None 
+            }
+        return routes
+
+    def get_best_routes(self):
+        self.best_routes = self.get_initail_routes()
+        for i in range(len(self.all_stations) - 1):
+            self.set_current_station()
+            self.set_neighbours()
+            self.set_min_time()
+            if not self.current_station:
+                break
+        # pprint.pprint(sta.routes)
+        return self.best_routes
+
+    def get_count_stops(self):
+        stops = 0 
+        des = self.destination
+        for i in range(20):
+            if self.best_routes[des]["time"] == infinity:
+                return stops
+            if self.best_routes[des]["prev"] != self.source:
+                stops += 1
+                des = self.best_routes[des]["prev"]
+            else:
+                break
+        return stops
 
 
-def shortest_path(source):
-    s1 = Station(source)
-    s1.initail_routes()
-    for r in range(len(s1.routes)-1):
-        s1.find_next_station()
-        s1.get_neighbours()
-        s1.replace_with_min_time()
-        if not s1.name:
-            break
-    # pprint.pprint(s1.routes)
-    return s1.routes
+def read_routes_file(filename):
+    routes_list = []
+    all_stations = set()
+    with open(file_name) as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',')
+        for row in csv_reader:
+            routes_list.append({
+                "station": [row[0], row[1]],
+                "time": int(row[2])
+            })
+            all_stations.update([row[0], row[1]])
+    return routes_list, all_stations
 
-def count_stops(routes, src, des):
-    stops = 0 
-    for i in range(20):
-        if routes[des]["time"] == 999:
-            return stops
-        if routes[des]["prev"] != src:
-            stops += 1
-            des = routes[des]["prev"]
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()                                               
+    parser.add_argument("--file", "-f", type=str, required=False)
+    args = parser.parse_args()  
+    file_name = args.file or "routes.csv"
+    routes_list, all_stations = read_routes_file(file_name)
+
+    infinity = 9999
+    source = input("What station are you getting on the train?: ").upper()
+    destination = input("What station are you getting off the train?: ").upper()
+
+    if source not in all_stations or destination not in all_stations:
+        print("Sorry, your input is invalid station :(")
+    elif source == destination:
+        print("You're on the station you would like to go -_-")
+    else:
+        st = Station(source, destination, all_stations, routes_list)
+        best_routes = st.get_best_routes()
+        stop_count = st.get_count_stops()
+        if best_routes[destination]["time"] != infinity:
+            print(f"Result: Best Routes from {source} -> {destination} takes {best_routes[destination]['time']} minutes, with {stop_count} stops.")
         else:
-            break
-    return stops
-
-infinity = 999
-source = input("What station are you getting on the train?: ").upper()
-destination = input("What station are you getting off the train?: ").upper()
-
-routes = shortest_path(source)
-stop_count = count_stops(routes, source, destination)
-if routes[destination]["time"] != infinity:
-    print(f"Result: Best Routes from {source} -> {destination} takes {routes[destination]['time']}, with {stop_count} stops.")
-else:
-    print(f"Result: No routes from {source} -> {destination}")
+            print(f"Result: No routes from {source} -> {destination}")
