@@ -1,5 +1,4 @@
 import csv
-import pprint
 import sys
 import argparse
 
@@ -26,7 +25,6 @@ class Station:
                 neighbours[path["station"][0]] = path["time"]
                 path["station"].append(self.current_station)
         self.neighbours = neighbours
-        # return neighbours
 
     def set_current_station(self):
         next_station = None
@@ -36,7 +34,6 @@ class Station:
                 next_station = k
             if k not in self.visited:
                 previous = v["time"]
-        # print(f"next_station: {next_station}")
         self.visited.append(next_station)
         self.current_station = next_station
 
@@ -67,7 +64,6 @@ class Station:
             self.set_min_time()
             if not self.current_station:
                 break
-        # pprint.pprint(sta.routes)
         return self.best_routes
 
     def get_count_stops(self):
@@ -82,6 +78,7 @@ class Station:
             else:
                 break
         return stops
+
 
 
 def read_routes_file(filename):
