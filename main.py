@@ -115,7 +115,6 @@ if __name__ == "__main__":
         print("You're on the station you would like to go -_-")
     else:
         st = Station(source, destination, all_stations, routes_list)
-        print(st)
         best_routes = st.get_best_routes()
         stop_count = st.get_count_stops()
         if best_routes[destination]["time"] != st.get_infinity():
