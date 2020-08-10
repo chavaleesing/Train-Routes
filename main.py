@@ -118,6 +118,6 @@ if __name__ == "__main__":
         best_routes = st.get_best_routes()
         stop_count = st.get_count_stops()
         if best_routes[destination]["time"] != st.get_infinity():
-            print(f"Result: Best Routes from {source} -> {destination} takes {best_routes[destination]['time']} minutes, with {stop_count} stops.")
+            print(f"Result: Your trip from {source} to {destination} includes {stop_count} stops and will take {best_routes[destination]['time']} minutes.")
         else:
-            print(f"Result: No routes from {source} -> {destination}")
+            print(f"Result: No routes from {source} to {destination}")
