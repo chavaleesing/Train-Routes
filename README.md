@@ -7,3 +7,9 @@ Find the shortest routes by run this command
 Example:
 
 ![ex1](example1.png)
+
+Run unittest by this command
+
+`$ python3 -m unittest`
+
+![ex2](example2.png)
